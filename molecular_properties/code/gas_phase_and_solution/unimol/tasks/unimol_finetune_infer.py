@@ -40,33 +40,15 @@ from unicore import checkpoint_utils
 logger = logging.getLogger(__name__)
 
 task_metainfo = {
-    'e_abs':  {'mean': [426.404052734375], 'std': [106.55741882324219], 'target_name': ['e_abs']},
-    'emi': {'mean': [498.9420471191406], 'std': [93.44234466552734], 'target_name': ['emi']},
-    's0s1': {'mean': [3.5718233585357666], 'std': [0.64279705286026], 'target_name': ['s0s1']},
     'gap': {'mean': [3.187112808227539], 'std': [0.39865079522132874], 'target_name': ['gap']},
     'plqy': {'mean': [0.3437875509262085], 'std': [0.30846232175827026], 'target_name': ['plqy']},
     'er': {'mean': [0.48549774289131165], 'std': [0.17436909675598145], 'target_name': ['er']},
     'hr': {'mean': [0.4215644896030426], 'std': [0.1842222511768341], 'target_name': ['hr']},
-    'pretrain': {'mean': [0.0043, 0.0048], 'std': [0.0086, 0.0097], 'target_name': ['homo' 'lumo']},
-    '500w_200_pretrain': {'mean': [0.0057, 0.0098], 'std': [0.0062, 0.0108], 'target_name': ['homo' 'lumo']},
-    'dimer_vh': {'mean': [16.7305], 'std': [24.44301], 'target_name': ['dimer_vh']},
-    'dimer_vl': {'mean': [19.5309], 'std': [28.2036], 'target_name': ['dimer_vl']},
-    'dimer_vh_delta': {'mean': [11.0573], 'std': [17.5165], 'target_name': ['dimer_vh']},
-    'dimer_vl_delta': {'mean': [13.2752], 'std': [20.0366], 'target_name': ['dimer_vh']},
-    'own_data_feature0_vh': {'mean': [16.6450], 'std': [24.1262], 'target_name': ['own_data_feature0_vh']},
-    'own_data_feature0_vh_delta': {'mean': [10.9817], 'std': [17.1642], 'target_name': ['own_data_feature0_vh_delta']},
-    'own_data_feature1_vh': {'mean': [16.6450], 'std': [24.1262], 'target_name': ['own_data_feature1_vh']},
-    # single tower
-    'deep4chem_abs_single_tower': {'mean': [426.5648193359375], 'std': [106.31590270996094], 'target_name': ['deep4chem_abs_single_tower']},
-    'deep4chem_emi_single_tower': {'mean': [498.8520202636719], 'std': [93.49156188964844], 'target_name': ['deep4chem_emi_single_tower']},
-    'deep4chem_fwhm_single_tower': {'mean': [74.30380249023438], 'std': [28.53831672668457], 'target_name': ['deep4chem_fwhm_single_tower']},
-    'deep4chem_plqy_single_tower': {'mean': [0.344806432723999], 'std': [0.3082983195781708], 'target_name': ['deep4chem_plqy_single_tower']},
-    'finetune_cz_large': {'mean': [1.2259587049484253, 2.0359466075897217, 0.34831202030181885, 3.7154295444488525, 0.6957359313964844], 'std': [0.6325188279151917, 1.0334678888320923, 0.44382670521736145, 0.9217318892478943, 0.372785359621048], 'target_name': ['gap', 'e_abs', 'edme', 'e_abs_max', 'edme_max']},
 }
 
 
-@register_task("mol_finetune")
-class UniMolFinetuneTask(UnicoreTask):
+@register_task("mol_finetune_infer")
+class UniMolFinetuneInferTask(UnicoreTask):
     """Task for training transformer auto-encoder models."""
 
     @staticmethod
@@ -113,11 +95,11 @@ class UniMolFinetuneTask(UnicoreTask):
             default="dict.txt",
             help="dictionary file",
         )
-        # parser.add_argument(
-        #     "--finetune-from-model",
-        #     default="",
-        #     help="pretrain weight",
-        # )
+        parser.add_argument(
+            "--finetune-from-model",
+            default="",
+            help="pretrain weight",
+        )
         parser.add_argument(
             "--only-polar",
             default=1,
@@ -125,23 +107,27 @@ class UniMolFinetuneTask(UnicoreTask):
             help="1: only reserve polar hydrogen; 0: no hydrogen; -1: all hydrogen ",
         )
         parser.add_argument(
-            "--consistent-loss",
-            default=0.0,
-            type=float,
-            help="add consistent loss",
+            "--todft",
+            action='store_true',
+            help="",
         )
         parser.add_argument(
-            "--weight-constant",
-            default=20.0,
-            type=float,
-            help="add consistent loss",
+            "--tolmdb",
+            action='store_true',
+            help="",
         )
         parser.add_argument(
-            "--finetune-encoder-model",
-            type=str,
-            default=None, 
-            help="pretrain encoder model path",
-        ),
+            "--strict_filter",
+            action='store_true',
+            help="",
+        )
+        parser.add_argument(
+            "--gap_type",
+            type=str, 
+            choices=['max', 'min'],
+            help="",
+        )
+
 
     def __init__(self, args, dictionary):
         super().__init__(args)
@@ -187,6 +173,27 @@ class UniMolFinetuneTask(UnicoreTask):
             dataset = AtomTypeDataset(dataset, dataset)
             tgt_dataset = KeyDataset(dataset, "target")
             smi_dataset = KeyDataset(dataset, "smi")
+        
+        if self.args.todft:
+            def PrependAndAppend(dataset, pre_token, app_token):
+                dataset = PrependTokenDataset(dataset, pre_token)
+                return AppendTokenDataset(dataset, app_token)            
+            ori_dataset =  dataset
+            ori_dataset = CroppingDataset(
+                ori_dataset, self.seed, "atoms", "coordinates", self.args.max_atoms
+            )
+            ori_src_dataset = KeyDataset(ori_dataset, "atoms")
+            ori_src_dataset = TokenizeDataset(
+                ori_src_dataset, self.dictionary, max_seq_len=self.args.max_seq_len
+            )
+            ori_src_dataset = PrependAndAppend(
+                ori_src_dataset, self.dictionary.bos(), self.dictionary.eos()
+            )
+            ori_coord_dataset = KeyDataset(ori_dataset, "coordinates")
+            ori_coord_dataset = FromNumpyDataset(ori_coord_dataset)
+            ori_coord_dataset = PrependAndAppend(ori_coord_dataset, 0.0, 0.0)
+
+
 
         dataset = RemoveHydrogenDataset(
             dataset,
@@ -195,16 +202,17 @@ class UniMolFinetuneTask(UnicoreTask):
             self.args.remove_hydrogen,
             self.args.remove_polar_hydrogen,
         )
+
+
         dataset = CroppingDataset(
             dataset, self.seed, "atoms", "coordinates", self.args.max_atoms
         )
+        # dataset = NormalizeDataset(dataset, "coordinates", normalize_coord=True)
         src_dataset = KeyDataset(dataset, "atoms")
-        ori_atoms_dataset =  KeyDataset(dataset, "atoms")
         src_dataset = TokenizeDataset(
             src_dataset, self.dictionary, max_seq_len=self.args.max_seq_len
         )
         coord_dataset = KeyDataset(dataset, "coordinates")
-        ori_coord_dataset = KeyDataset(dataset, "coordinates")
 
         def PrependAndAppend(dataset, pre_token, app_token):
             dataset = PrependTokenDataset(dataset, pre_token)
@@ -242,6 +250,15 @@ class UniMolFinetuneTask(UnicoreTask):
                     "finetune_target": RawLabelDataset(tgt_dataset),
                 },
                 "smi_name": RawArrayDataset(smi_dataset),
+                "ori_tokens": RightPadDataset(
+                        ori_src_dataset,
+                        pad_idx=self.dictionary.pad(),
+                    ) if self.args.todft else None,
+                "ori_coords": RightPadDatasetCoord(
+                    ori_coord_dataset,
+                    pad_idx=0,
+                    ) if self.args.todft else None,
+
             },
         )
         if not self.args.no_shuffle and split == "train":
@@ -254,6 +271,7 @@ class UniMolFinetuneTask(UnicoreTask):
             )
         else:
             self.datasets[split] = nest_dataset
+
     def build_model(self, args):
         from unicore import models
 
