@@ -1,0 +1,6 @@
+molecular_properties/data/gas_phase/gap/*.lmdb
+molecular_properties/data/gas_phase/er/*.lmdb
+molecular_properties/data/gas_phase/hr/*.lmdb
+molecular_properties/data/gas_phase/s0s1/*.lmdb
+*__pycache__*
+*.pt
