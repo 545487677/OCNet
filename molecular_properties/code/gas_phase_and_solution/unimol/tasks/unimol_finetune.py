@@ -170,6 +170,7 @@ class UniMolFinetuneTask(UnicoreTask):
             tgt_dataset = KeyDataset(dataset, "target")
             smi_dataset = KeyDataset(dataset, "smi")
 
+
         dataset = RemoveHydrogenDataset(
             dataset,
             "atoms",
