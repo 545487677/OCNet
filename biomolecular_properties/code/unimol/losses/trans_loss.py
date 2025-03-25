@@ -51,6 +51,7 @@ class TransLoss(UnicoreLoss):
                 "sample_size": sample_size,
                 "num_task": self.args.num_classes,
                 "bsz": sample["target"]["all_target"].size(0),
+                "idx": sample["idx"] if "idx" in sample else None,
             }
         else:
             logging_output = {

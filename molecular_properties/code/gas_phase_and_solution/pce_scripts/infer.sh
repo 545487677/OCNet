@@ -26,3 +26,5 @@ torchrun --nproc_per_node=$n_gpu --master_port=$MASTER_PORT ../unimol/infer_pce.
        --feature-num 13 \
 
 
+# R2 for Column 0: 0.6956279298362307
+# MAE for column 0: 0.7381467078526814

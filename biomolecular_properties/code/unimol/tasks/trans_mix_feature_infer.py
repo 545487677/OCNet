@@ -132,7 +132,10 @@ class UniMolTransMixFeatureInferFinetuneTask(UnicoreTask):
         # cm_dataset = CMDataset(cm_dataset)
         # cm_intra_dataset  = KeyDataset(dataset, "intra_inter_cm")
         feature_dataset = KeyDataset(dataset, "features")
-        
+        try:
+            idx_dataset = KeyDataset(dataset, "idx") 
+        except:
+            idx_dataset = None
         dataset = ConformerSampleDataset(
                 dataset, self.args.seed, "atoms", "coordinates"
             )
@@ -176,6 +179,7 @@ class UniMolTransMixFeatureInferFinetuneTask(UnicoreTask):
                     "target": {
                         "all_target": RawLabelDataset(tgt_dataset), 
                     },
+                    "idx": RawArrayDataset(idx_dataset) if idx_dataset is not None else None,
 
                 },
             )
