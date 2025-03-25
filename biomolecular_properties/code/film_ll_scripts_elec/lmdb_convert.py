@@ -118,11 +118,13 @@ def workflow(input_npz_path=None, output_path=None):
     output_path_ll = os.path.join(output_path, TASKS_NAME_LL)
     process_to_lmdb(input_path=input_npz_path, output_path=output_path_ll, task_name='ll')
     lmdb_file = os.path.join(output_path_ll, "valid.lmdb")
+    os.system(f'cp {output_path}/pretrain_dict.txt {output_path_ll}')
     if not os.path.exists(lmdb_file):
         raise FileNotFoundError(f"LMDB file not found: {lmdb_file}")
 
 if __name__ == "__main__":
-
-    input_path = '/vepfs/fs_users/zhengcheng/unimol_learn/OCNet/biomolecular_properties/data/film_elec_mobility/mol_105901_mob/data_ll.npz'
-    output_path = '/vepfs/fs_projects/FunMG/paper_code/OCNet/biomolecular_properties/data/film_ll_elec/'
+    import sys 
+    
+    input_path = f'/vepfs/fs_users/zhengcheng/unimol_learn/OCNet/biomolecular_properties/data/film_elec_mobility/{sys.argv[1]}/data_ll.npz'
+    output_path = '/vepfs/fs_users/zhengcheng/unimol_learn/OCNet/biomolecular_properties/data/film_ll_elec'
     workflow(input_path, output_path)
