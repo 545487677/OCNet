@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-'''
-从晶体结构/薄膜结构开始，完成整个计算, 后续需要把gen_sol_box.py 里面的代码merge进来
-'''
 import sys
 import numpy as np 
 import os 
@@ -15,14 +12,13 @@ import json
 import pandas as pd 
 
 pi_constant = 3.14159265359; hbar = 6.582119569e-16
-boltzmann_constant = 8.617333262145e-5; temperature = 300 # temperature 设置为室温 
+boltzmann_constant = 8.617333262145e-5; temperature = 300 
 
 def convert_1d_to_2d(V_Ls, displaces, pair):
     V_Ls_2d = []; displaces_2d = []; mol_idx = []
     pair = pair[:,0:2] 
     for i in range(np.max(pair)+1):
         V_Ls_2d.append([]); displaces_2d.append([]); mol_idx.append([])
-    # 获取2d数组 
     for idx, pp in enumerate(pair):
         V_Ls_2d[pp[0]].append(V_Ls[idx])
         displaces_2d[pp[0]].append(displaces[idx])
@@ -32,13 +28,7 @@ def convert_1d_to_2d(V_Ls, displaces, pair):
 
 @njit 
 def run_kmc(t_tot, rate_tot_list, displaces, probablity_list, mol_idx, ntot_trj):
-    '''
-    t_tot: 运行的总时间 单位s 
-    rate_tot_list: [n_mol, 1] 每个分子可能跃迁时间的速率常数之和
-    displaces: [n_mol, n_nei, 3] 每个分子跃迁的位置矢量
-    probablity_list: [n_mol, n_nei] 每个分子跃迁不同位置对应的随机数分布
-    mol_idx: [n_mol, n_nei] 每个分子对应的可跃迁的分子
-    '''
+
     t_currs = []; disp_currs = []
     for i in range(ntot_trj):
         print(i)
@@ -78,17 +68,14 @@ elif method == 'xTB':
     V_Ls = np.abs(np.array(data['VL_xtb']))/1000. 
 
 displaces = data['displace']; pair = data['pair']
-# 将displaces & mol_idx 转换为列表格式，按[n_mol, nei_mol]格式 
 V_Ls, displaces, mol_idx = convert_1d_to_2d(V_Ls, displaces, pair)
 
-# 计算速率常数相关
 rate_list_elec = []; rate_tot_list_elec = []; probablity_list_elec = [] 
 
 def convert_data(rate_tot_list_elec,  displaces, probablity_list_elec,  mol_idx):
     # convert 
     _rate_tot_list_elec, _displaces, _probablity_list_elec, _mol_idx = [], [], [], []
     num = [len(uu) for uu in mol_idx]; num = np.max(num)
-    # 避免0 
     for ii in range(len(rate_tot_list_elec)):    
         _rate_tot_list_elec.append(max(1., rate_tot_list_elec[ii]))
     for ii in range(len(mol_idx)):
