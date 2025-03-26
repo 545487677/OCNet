@@ -142,30 +142,10 @@ def main(args):
             if len(sample) == 0:
                 continue
             _, _, log_output = task.valid_step(sample, model, loss, test=True)
-
-            if args.todft:
-                mask = (~(create_special_mask(sample["ori_tokens"], special_idx_tensor))).int()
-
-                mask_unsqueezed = mask.unsqueeze(-1)
-                mask_expanded = mask_unsqueezed.expand_as(sample['ori_coords'])
-
-                for token, coords in zip(sample["ori_tokens"] * mask, sample['ori_coords'] * mask_expanded):
-                    non_zero_tokens = token[token!=0].cpu().numpy()
-                    atoms = [indices[i] for i in non_zero_tokens]
-                    atoms_list.append(atoms)
-                    
-                    non_zero_coords = coords[(coords != 0).any(dim=1)].cpu().numpy()
-                    coords_list.append(non_zero_coords)
-                    
-                    assert len(atoms) == len(non_zero_coords), "The number of atoms does not match the number of coordinates"
-
-
             if hasattr(args, "mode") and args.mode == 'infer':
                 rep_list.extend(log_output['rep'].cpu().detach().numpy())
-                smi_list.extend(sample['smi_name'])
             else:
                 pred_list.extend(log_output["predict"].cpu().detach().numpy())
-                smi_list.extend(sample['smi_name'])
                 progress.log({}, step=i)
                 log_outputs.append(log_output)
                 target_list.extend(log_output['target'].cpu().detach().numpy()) 
@@ -196,10 +176,6 @@ def main(args):
 
         pred_df = pd.DataFrame(pred_list, columns=[f'{args.task_name}_pred'])
         target_df = pd.DataFrame(target_list, columns=[f'{args.task_name}_target'])
-        if len(smi_list) == len(pred_df):
-            pred_df.insert(0, 'SMILES', smi_list)
-        else:
-            print("warning: SMILES list length does not match the DataFrame row count")
 
         if val_idx_list is not None and len(val_idx_list) == len(pred_df):
             if not all(v is None for v in val_idx_list):  

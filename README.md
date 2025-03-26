@@ -1,4 +1,4 @@
-## OCNet: A Domain Knowledge-Enhanced General Moleculer Representation Framework for Optoelectronic and Charge-transport Materials
+## Virtual Characterization via Knowledge-Enhanced Representation Learning: from Organic Conjugated Molecules to Devices
 [[Paper](https://chemrxiv.org/engage/api-gateway/chemrxiv/assets/orp/resource/item/67959d016dde43c9086a1f4b/original/oc-net-a-domain-knowledge-enhanced-general-moleculer-representation-framework-for-optoelectronic-and-charge-transport-materials.pdf)] Guojiang Zhao ,Qi Ou ,Zifeng Zhao ,Shangqian Chen ,Haitao Lin ,Xiaohong Ji ,Zhen Wang ,Hongshuai Wang ,Hengxing Cai ,Lirong Wu ,Shuqi Lu ,FengTianCi Yang ,Zhifeng Gao ,Zheng Cheng. 10.26434/chemrxiv-2025-b6n4m
 
 The characterization of material properties plays a crucial role in revealing the structure-property relationship and optimizing device performance. Organic optoelectronic and transporting materials, widely used in various fields, face challenges in experimental property characterization not only due to their high cost but also the requirement of multidisciplinary knowledge. To address this problem, we introduce OCNet, a domain knowledge-enhanced representation learning framework, with which the efficient and accurate virtual characterization is made possible. Based on the SE(3) transformer architecture and a self-constructed large-scale conjugated molecular database with millions of structures and properties, OCNet realizes general molecular and bimolecular representation and supports the integration of domain knowledge features. In multiple optoelectronic property prediction tasks, OCNet shows a significant improvement in accuracy compared to previously reported models. It also constructs a DFT accuracy database for the transfer integrals of thin-film materials and renders the general prediction of such properties possible. With its user-friendly interface, OCNet can serve as an effective virtual characterization tool, facilitating the development of optoelectronic devices and other functional material research.
@@ -23,7 +23,7 @@ The characterization of material properties plays a crucial role in revealing th
 #### 1. Download Molecular Pre-training Database 
 Download the processed dataset `train.tar.gz` and `valid.lmdb` from [Pre-training molecular database and models of OCNet](https://zenodo.org/records/14935486). Then, unzip 的`train.tar.gz` and copy the `train.lmdb` and `valid.lmdb` to `./molecular_properties/data/pretrain` directory.   
 #### 2. Download Bimolecular Pre-training Database 
-Download the processed dataset `train.lmdb` and `valid.lmdb` from [Pre-training bimolecular database and models of OCNet](https://zenodo.org/records/14934728). Then, copy the `train.lmdb` and `valid.lmdb` to `./biomolecular_properties/data/pretrain` directory. 
+Download the processed dataset `data.tar.gz` from [Pre-training bimolecular database and models of OCNet](https://zenodo.org/records/14934728). Then, copy the `data/train.lmdb` and `data/valid.lmdb` to `./biomolecular_properties/data/pretrain` directory. 
 
 ### Pre-training Weights 
 #### 1. Download Molecular Pre-training Weights
@@ -60,10 +60,10 @@ Photoluminescence Quantum Yield: cd ./molecular_properties/code/gas_phase_and_so
 #### 1. Download the processed dataset from [Downstream bimolecular models and properties of OCNet](https://zenodo.org/records/14934618). Then, unzip the `crystal_hh_data.tar.gz`, `crystal_ll_data.tar.gz`, `film_hh_data.tar.gz`, and `film_ll_data.tar.gz`. Finally, copy the `crystal_hh`, `crystal_ll`, `film_hh`, `film_ll` to `./bimolecular_properties/data`. 
 #### 2. If you want to fine-tuning transfer integrals in crystal or thin film, you can run the following command:
 ```
-Hole transfer integrals in crystal: cd /biomolecular_properties/code/crystal_hh_scripts && bash train.sh 
-Electron transfer integrals in crystal: cd /biomolecular_properties/code/crystal_ll_scripts && bash train.sh 
-Hole transfer integrals in film: cd /biomolecular_properties/code/film_hh_scripts && bash train.sh 
-Electron transfer integrals in film: cd /biomolecular_properties/code/film_ll_scripts && bash train.sh 
+Hole transfer integrals in crystal: cd ./biomolecular_properties/code/crystal_hh_scripts && bash train.sh 
+Electron transfer integrals in crystal: cd ./biomolecular_properties/code/crystal_ll_scripts && bash train.sh 
+Hole transfer integrals in film: cd ./biomolecular_properties/code/film_hh_scripts && bash train.sh 
+Electron transfer integrals in film: cd ./biomolecular_properties/code/film_ll_scripts && bash train.sh 
 ```
 
 ## Infer 
@@ -91,11 +91,36 @@ Photoluminescence Quantum Yield: cd ./molecular_properties/code/gas_phase_and_so
 #### 1. Download the processed dataset from [Downstream bimolecular models and properties of OCNet](https://zenodo.org/records/14934618). Then, unzip the `crystal_hh_weight.tar.gz`, `crystal_ll_weight.tar.gz`, `film_hh_weight.tar.gz`, and `film_ll_weight.tar.gz`. Finally, copy the `crystal_hh`, `crystal_ll`, `film_hh`, `film_ll` to `./bimolecular_properties/weight`. 
 #### 2. run the following command to infer the transfer integrals in the crystals or films:
 ```
-Hole transfer integrals in crystal: cd /biomolecular_properties/code/crystal_hh_scripts && bash infer.sh 
-Electron transfer integrals in crystal: cd /biomolecular_properties/code/crystal_ll_scripts && bash infer.sh 
-Hole transfer integrals in film: cd /biomolecular_properties/code/film_hh_scripts && bash infer.sh 
-Electron transfer integrals in film: cd /biomolecular_properties/code/film_ll_scripts && bash infer.sh 
+Hole transfer integrals in crystal: cd ./biomolecular_properties/code/crystal_hh_scripts && bash infer.sh 
+Electron transfer integrals in crystal: cd ./biomolecular_properties/code/crystal_ll_scripts && bash infer.sh 
+Hole transfer integrals in film: cd ./biomolecular_properties/code/film_hh_scripts && bash infer.sh 
+Electron transfer integrals in film: cd ./biomolecular_properties/code/film_ll_scripts && bash infer.sh 
 ```
+
+### Inferred Electron mobility 
+#### 1. Download the processed dataset from [Thin film structures and transfer integrations](https://zenodo.org/records/15083880). Then, unzip the `film_elec_mobility.zip`. Finally, copy the `film_elec_mobility` to `./biomolecular_properties/data`.
+#### 2. run the following command to infer the transfer integrals of any thin film(e.g. mol_105511_mob):
+```
+cd ./biomolecular_properties/code/film_ll_scripts_elec
+ && python lmdb_convert.py mol_105511_mob && bash infer.sh
+```
+#### 3. run kMC to infer the electron mobility of any film(e.g. mol_105511_mob
+```
+mobility calculated with the OCNet:cd ./biomolecular_properties/code/film_ll_scripts_elec
+ && python mobility_film.py mol_105901_mob OCNet
+mobility calculated with the QM method:cd ./biomolecular_properties/code/film_ll_scripts_elec
+ && python mobility_film.py mol_105901_mob QM
+mobility calculated with the xTB method:cd ./biomolecular_properties/code/film_ll_scripts_elec
+ && python mobility_film.py mol_105901_mob xTB
+```
+
+### Inferred Device PCE
+#### 1. copy the `valid.lmdb` to `./molecular_properties/data/pce`
+#### 2. run the following command to infer the Device PCE:
+```
+cd ./molecular_properties/code/gas_phase_and_solution/pce_scripts && bash infer.sh 
+```
+
 
 ## Licence 
 This project is licensed under the terms of the MIT license.
