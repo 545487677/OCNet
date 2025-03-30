@@ -21,7 +21,7 @@ The characterization of material properties plays a crucial role in revealing th
 ## Pre-training 
 ### Pre-training Database 
 #### 1. Download Molecular Pre-training Database 
-Download the processed dataset `train.tar.gz` and `valid.lmdb` from [Pre-training molecular database and models of OCNet](https://zenodo.org/records/14935486). Then, unzip 的`train.tar.gz` and copy the `train.lmdb` and `valid.lmdb` to `./molecular_properties/data/pretrain` directory.   
+Download the processed dataset `train.tar.gz` and `valid.lmdb` from [Pre-training molecular database and models of OCNet](https://zenodo.org/records/14935486). Then, unzip `train.tar.gz` and copy the `train.lmdb` and `valid.lmdb` to `./molecular_properties/data/pretrain` directory.   
 #### 2. Download Bimolecular Pre-training Database 
 Download the processed dataset `data.tar.gz` from [Pre-training bimolecular database and models of OCNet](https://zenodo.org/records/14934728). Then, copy the `data/train.lmdb` and `data/valid.lmdb` to `./biomolecular_properties/data/pretrain` directory. 
 
