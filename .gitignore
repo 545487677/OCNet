@@ -3,4 +3,5 @@
 *.lmdb
 *.npz
 *.csv
-*.sh
+molecular_properties/code/gas_phase_and_solution/*_scripts
+biomolecular_properties/code/*_scripts
