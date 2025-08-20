@@ -3,3 +3,5 @@
 *.lmdb
 *.npz
 *.csv
+molecular_properties/code/*_scripts
+biomolecular_properties/code/*_scripts
